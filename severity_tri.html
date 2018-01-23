@@ -1,0 +1,690 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<style>
+		td {
+			padding: 10px;
+			text-align: right;
+		}
+		
+		
+		#tooltip {
+			position: absolute;
+			width: auto;
+			height: auto;
+			padding: 10px;
+			padding-left: 25px;
+			padding-bottom: 5px;
+			background-color: beige;
+			-webkit-border-radius: 10px;
+			-moz-border-radius: 10px;
+			border-radius: 10px;
+			-webkit-box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.4);
+			-moz-box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.4);
+			box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.4);
+			pointer-events: none;
+		}
+		
+		#select-limits {
+			margin-top: -55px;
+			transform: translate(0px,55px);
+		}
+		
+		
+		
+	</style>
+	<title>Severity Triangles</title>
+	<!-- jQuery Reference -->
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+	<!-- d3.js reference -->
+	<script src="https://d3js.org/d3.v4.min.js" charset="utf-8"></script>
+	<!-- bootstrp reference -->
+	<link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+	<!-- data tables css reference -->
+	<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/v/dt/jqc-1.12.3/dt-1.10.12/cr-1.3.2/fc-3.2.2/fh-3.1.2/sc-1.4.2/se-1.2.0/datatables.min.css"/>
+	<!-- data tables javascript reference -->
+	<script type="text/javascript" src="https://cdn.datatables.net/v/dt/jqc-1.12.3/dt-1.10.12/cr-1.3.2/fc-3.2.2/fh-3.1.2/sc-1.4.2/se-1.2.0/datatables.min.js"></script>
+	
+</head>
+<body>
+<div class="container-fluid">
+	<!-- row div doesn't actually do anything since bootstrap columns are not used -->
+	<div class="row" style="height: 20px;">
+		<select id ="select-time">
+			<option value="MONTH">Month</option>
+			<option value="WEEK">Week</option>
+		</select>
+		<select id ="select-type">
+			<option value="REPORT">Report</option>
+			<option value="CALENDAR">Calendar</option>
+		</select>
+		<select id ="select-state">
+			<option value="FL" selected=TRUE>Florida</option>
+			<option value="TX">Texas</option>
+		</select>
+		<select id ="select-program">
+			<!-- program options are populated in script based on state selected -->
+			<option class="keep" value="%">All Programs</option>
+			<option value="WIN">WIN</option>
+		</select>
+		<select id ="select-coverage">
+			<option value="%">All Coverages</option>
+			<option value="PIP" selected=TRUE>PIP</option>
+			<option value="PD">PD</option>
+			<option value="BI%">BI</option>
+			<option value="CMP">CMP</option>
+			<option value="COL">COL</option>
+		</select>
+		<select id ="select-loss">
+			<option value="PAID">Paid Severity</option>
+			<option value="INCUR" >Incurred Severity</option>
+			<option value="CWOP" >CWOPs</option>
+			<option value="OPEN" >Open Claims</option>
+			<option value="CWA" >CWAs</option>
+			<option value="BILL" >Medical Bills</option>
+		</select>
+		<select id ="select-report">
+			<option value="YES">Per Reported</option>
+			<option value="NO">Total Amount</option>
+		</select>
+		<select id ="select-ec">
+			<option value="YES">Remove EC</option>
+			<option value="LIT">Remove LIT</option>
+			<option value="LITONLY">LIT Only</option>
+			<option value="NO" >Include Both</option>
+			<option value="NORECOV">Remove Recoveries</option>
+			<option value="RECOVONLY">Recoveries Only</option>
+		</select>
+		<select id ="select-county">
+			<option value="ALL">All Counties</option>
+			<option value="MIAMI-DADE">Miami-Dade</option>
+			<option value="BROWARD">Broward</option>
+			<option value="PALM BEACH">Palm Beach</option>
+			<option value="PINELLAS">Pinellas</option>
+			<option value="HILLSBOROUGH">Hillsborough</option>
+			<option value="DUVAL">Duval</option>
+			<option value="OTHER">Other</option>
+		</select>
+		<select id="select-limits" multiple disabled=true style="opacity:0;">
+			<option value="10000/20000" selected=true>10/20</option>
+			<option value="25000/50000" selected=true>25/50</option>
+			<option value="50000/100000" selected=true>50/100</option>
+			<option value="100000/300000" selected=true>100/300</option>
+			<option value="OTHER" selected=true>Other</option>
+		</select>
+		<button id="runButton" type = "button">Run Data</button>
+	</div>
+<br>
+<br>
+	<!-- div to put yearly summary severities in -->
+	<div style="height: 30vh; margin-top:-25px;">
+		<div class="col-sm-4">
+			<table id="myTable2" class="table-bordered">
+				<thead id="thead-2">
+				</thead>
+				<tbody id ="tbody-2">
+				
+				</tbody>
+			</table>
+		</div>
+		<!-- div for export button -->
+		<div class="col-sm-8">
+			<a href="#" id="xx" style="text-decoration:none;color:#000;background-color:#ddd;border:1px solid #ccc;padding:8px;">Export Triangle data into CSV</a>
+		</div>
+	</div>
+<br>
+<br>
+
+
+
+	<!-- div to put severity triangle in -->
+	<div id="tableDiv" class="row" style="height:40vh">
+		<table id="myTable" class="table-bordered" height="40vh">
+			<thead id="thead-1" style="">
+			
+			</thead>
+			<div>
+				<tbody id ="tbody-1" style="">
+				
+				</tbody>
+			</div>
+		</table>
+	</div>
+</div>
+<!-- pop up for when triangle cell is clicked -->
+<div id="tooltip" style="display: none;">
+	<p><span id="value">Query has been copied to Clipboard</span></p>
+</div>
+
+	<script>
+	$(document).ready(function()
+	{
+	//when any select is changed, turn it red, and show limits multiselect if coverage is bi
+	d3.selectAll("select").on("change",function(d) {
+		var covSelect = d3.select("#select-coverage").property("value");
+		d3.select(this).style("color","red");
+		d3.select("#select-limits").property("disabled",covSelect != "BI%")
+			.style("opacity",covSelect == "BI%"?1:0);});
+		// when button is clicked, run triangle function
+		d3.select("#runButton").on("click",run_data);
+	
+	function run_data() {
+		// switch all selects back to text color of black
+		d3.selectAll("select").style("color","black");
+		// put selected values into variables
+		var progs = {"FL" : ['WIN','OPT','SEL','ICN'], "TX" : ['AL','AS','ES','EL','EV']};
+		var covSelect = d3.select("#select-coverage").property("value");
+		var lossSelect = d3.select("#select-loss").property("value");
+		var reportSelect = d3.select("#select-report").property("value");
+		var stateSelect = d3.select("#select-state").property("value");
+		var typeSelect = d3.select("#select-type").property("value");
+		var timeSelect = d3.select("#select-time").property("value");
+		covSelect = (covSelect == "BI%" && stateSelect == "TX")?"BI":covSelect;
+		// make limit select an array because more than one value can be selected
+		var limitSelect = [];
+		d3.select("#select-limits").selectAll("option").attr("nothing",function(d) {
+			var option = d3.select(this);
+			if(option.property("selected") == true) 
+			{limitSelect.push(option.property("value"));};
+				});
+		// change limit select array to underscore separated text string so it can be passed to php script
+		limitSelect = limitSelect.join("_");
+		// make program options correspond to correct state
+		var progOptions = d3.select("#select-program")
+			.selectAll("option:not(.keep)")
+			.data(progs[stateSelect]);
+		progOptions
+			.attr("value",function(d) {return d;})
+			.text(function(d) {return d;});
+		progOptions
+			.enter().append("option")
+			.attr("value",function(d) {return d;})
+			.text(function(d) {return d;});
+		progOptions
+			.exit().remove();
+		var progSelect = d3.select("#select-program").property("value");
+	
+		d3.select("#select-report").property("disabled",lossSelect.substring(lossSelect.length-4,lossSelect.length) == "TIME")
+			.style("opacity",lossSelect.substring(lossSelect.length-4,lossSelect.length) == "TIME"?.5:1);
+	
+		d3.select("#select-limits").property("disabled",covSelect != "BI%")
+			.style("opacity",covSelect == "BI%"?1:0);
+		// put cwop, open,  cwa and bill in object so can be identified for different formatting
+		var cwopOpenCwaBill = (lossSelect in {"CWOP" : 0, "OPEN" : 0, "CWA" : 0, "BILL" : 0});
+		
+		// disable ec options when looking at count numbers
+		d3.select("#select-ec").property("disabled",cwopOpenCwaBill)
+			.style("opacity",cwopOpenCwaBill?.5:1);
+			
+		// delete existing table div, and reappend
+		d3.select("#tableDiv").remove();
+		d3.select("div").append("div")
+			.attr("id","tableDiv")
+			.attr("class","row")
+			.style("height","40vh");
+		var table = d3.select("#tableDiv").append("table")
+			.attr("id","myTable")
+			.attr("class","table-bordered")
+			.attr("height","40vh");
+			
+		table.append("thead")
+			.attr("id","thead-1");
+			
+		table.append("tbody")
+			.attr("id","tbody-1");
+		var loop;
+		var xScrolling;
+		loop = 72;
+		xScrolling = true;
+		// create string from selected options to pass in php string
+		var php_string = "?prog="+d3.select("#select-program").property("value")+
+			"&cov="+d3.select("#select-coverage").property("value")+
+			"&loss="+d3.select("#select-loss").property("value")+
+			"&county="+d3.select("#select-county").property("value")+
+			"&ec="+d3.select("#select-ec").property("value")+
+			"&type="+d3.select("#select-type").property("value")+
+			"&time="+d3.select("#select-time").property("value")+
+			"&limits="+limitSelect+
+			"&state="+stateSelect;
+		// run 72 loops when grouped by month, and 312 for weeks; 6 years of data
+		loop = d3.select("#select-time").property("value")=="MONTH"?72:312;
+		// output local host version of php address into console for development purposes
+		console.log("localhost/product/php/severity_tri.php" + php_string);
+		// delete all rows from table
+		d3.selectAll("tr").remove();
+			// call php string
+			var reportJson = d3.json("php/severity_tri.php" + php_string, function(error, data) {
+				// format the cell text based on calculated number and whether it is per reported
+				var formatObject = {
+					"PAID-YES" : ".0f",
+					"INCUR-YES" : ".0f",
+					"CWOP-YES" : ".0%",
+					"OPEN-YES" : ".0%",
+					"CWA-YES" : ".0%",
+					"BILL-YES" : ".2f",
+					"PAID-NO" : ",.0f",
+					"INCUR-NO" : ",.0f",
+					"CWOP-NO" : ".0f",
+					"OPEN-NO" : ".0f",
+					"CWA-NO" : ".0f",
+					"BILL=NO" : ".0f"}
+				// translate select options into sql columns
+				var sumObject = {
+					"PAID" : "PAID_AMOUNT",
+					"INCUR" : "PAID_AMOUNT",
+					"CWOP" : "CWOP_COUNT",
+					"OPEN" : "OPEN_COUNT",
+					"CWA" : "CWA_COUNT",
+					"BILL" : "BILLS_COUNT"
+						}
+				// group resulting data by report period or calendar period, depending on options selected
+				data = d3.nest()
+					.key(function(d) {return d3.select("#select-type").property("value")=="REPORT"?d.REPORT_MONTH:d.CALENDAR_MONTH;})
+					.sortKeys(d3.ascending)
+					.entries(data);
+				// output grouped data into console
+				console.log(data);
+				// stop loop if not enough data exists
+				var columnCount = d3.min([loop, data.length-1]);
+				// create object for changes between cells; labels will be time colum used, up to 12 values in each will be stored
+				var changeAmount = {};
+				data.forEach(function(d, i) {
+					// pull reported count amount from 0 lag data
+					d.reportedCount = d3.sum(d.values, function(e) {
+						return +e.LAG_MONTH == 0?+e.REPORTED_COUNT:0});
+					// for number of lags for calendar data, use minimum of loop value and index (ie 0 for first report month, 1 for second, etc)
+					d.calendarCount = d3.min([loop, i]);
+					// for number of lags for report data, use min of loop value and total number of periods minus the index
+					// each row will have loop amount of columns, but ones that don't pass the prior condition will fill out with expected values
+					d.reportCount = d3.min([loop, (data.length - 1) - i]);
+					// use loop value based on if calendar or report
+					var loopCount = d3.select("#select-type").property("value")=="REPORT"?loop:d.calendarCount;
+					// create array inside each data point
+					d.lag = [];
+					// loop from 0 to columCount value
+					for(var j = 0; j <= columnCount; j ++) {
+						// object j in lag array contains row and column values to place on severity triangle
+						d.lag[j] = {};
+						d.lag[j].row = d.key;
+						d.lag[j].column = j;
+						// Calendar year and lag is less than current period
+						if(d3.select("#select-type").property("value")=="CALENDAR" && j > d.calendarCount)
+							{
+							// on calendar, if loop is greater than calendar count, make cell empty with no border
+							d.lag[j].textValue = "";
+							d.lag[j].borderValue = "none";}
+						// calendar year and claim counts  numbers
+						else if(d3.select("#select-type").property("value")=="CALENDAR" && d3.select("#select-loss").property("value") in {"CWOP" : 0, "OPEN" : 0, "CWA" : 0})
+							{
+							// sum value, and subtract what would be the column up and to the left, to get net change of claim counts
+							d.lag[j].textValue = (d3.sum(d.values, function(e) {
+								return (+e.LAG_MONTH == j)
+									?
+									+e[sumObject[d3.select("#select-loss").property("value")]]
+									:
+									0}) 
+									- (data[i - 1]?d3.sum(data[i-1].values, function(s) {return s.LAG_MONTH==(j-1)?+s[sumObject[d3.select("#select-loss").property("value")]]:0}):0)
+									)/
+							(d3.select("#select-report").property("value")=="YES"?
+							d3.sum(d.values, function(e) {return (+e.LAG_MONTH == j)?+e.REPORTED_COUNT:0})
+							:1);
+							d.lag[j].formatValue = formatObject[d3.select("#select-loss").property("value") + "-" + d3.select("#select-report").property("value")];
+							// make cell have a solid border
+							d.lag[j].borderValue = "solid none none solid";
+							}
+						// report month for expected values
+						else if(d3.select("#select-type").property("value")=="REPORT" && j > d.reportCount)
+							{
+							//if no values in change amount, make zero
+							//else, average all values in change amount
+							d.lag[j].textValue = (lossSelect!="BILL"?+d.lag[j-1].textValue:0) + 
+								(changeAmount[j].length == 0?0:d3.mean(changeAmount[j], function(d) {return d}));
+							d.lag[j].formatValue = formatObject[d3.select("#select-loss").property("value") + "-" + d3.select("#select-report").property("value")];
+							// make cell have dashed border
+							d.lag[j].borderValue = ".5px dashed black";}
+						// report month for actual values
+						else
+							{
+							// if j in change amount doesn't exist, create it
+							if(!changeAmount[j])
+							{changeAmount[j] = []}
+							// weighted value = total sum, not divided by reported count
+							d.lag[j].weightedValue = d3.sum(d.values, function(e) {
+								return (
+										(d3.select("#select-loss").property("value") in {"CWOP" : 0, "CWA" : 0, "OPEN" : 0, "BILL" : 0}
+										||
+										d3.select("#select-type").property("value") == "CALENDAR")
+										?
+										(+e.LAG_MONTH == j)
+										:
+										(+e.LAG_MONTH <= j)
+										)
+									?
+									+e[sumObject[d3.select("#select-loss").property("value")]]
+									:
+									0});
+								// text value is weighted value divided by report count
+							d.lag[j].textValue = +d.lag[j].weightedValue/
+							(d3.select("#select-report").property("value")=="YES"
+							?
+							d3.sum(d.values, function(e) {return (+e.LAG_MONTH == (stateSelect=="TX"?0:j))?+e.REPORTED_COUNT:0})
+							:
+							1
+							);
+							d.lag[j].formatValue = formatObject[d3.select("#select-loss").property("value") + "-" + d3.select("#select-report").property("value")];
+							// make cell sold bordered
+							d.lag[j].borderValue = "solid none none solid";
+							// push value into change amount j; if 12 already exist, remove oldest one
+							if(changeAmount[j].length == 12)
+							{changeAmount[j] = changeAmount[j].slice(1,12);}
+							if(isFinite(+d.lag[j].textValue))
+							{
+								// change amount is value minus prior column value, or just value if bills
+								changeAmount[j].push(+d.lag[j].textValue - (d.lag[j-1]&&lossSelect!="BILL"?d.lag[j-1].textValue:0));
+							}
+							}
+					};
+				});
+				// add row to table header, and make first column contain a concatenation of (Report or Calendar) and (week or month)
+				var thead = d3.select("#thead-1").append("tr");
+					thead.append("td").text(function() {var textLabel = "";
+					switch (d3.select("#select-type").property("value")) {
+						case "REPORT":
+							textLabel += "Report ";
+							break;
+						case "CALENDAR":
+							textLabel += "Calendar ";
+							break;
+						}
+					switch (d3.select("#select-time").property("value")) {
+						case "WEEK":
+							textLabel += "Week";
+							break;
+						case "MONTH":
+							textLabel += "Month";
+							break;
+						}			
+					return textLabel;});
+				var theadLabel = {"PAID" : "Total Paid", 
+					"INCUR" : "Total Incurred",
+					"CWOP" : "Total CWOPs",
+					"OPEN" : "Total Open",
+					"CWA" : "Total CWAs",
+					"BILL" : "Total Bills"};
+				
+				// if reported, display header for report count for row; overwise show average of total amount * lag period
+				if(d3.select("#select-type").property("value") == "REPORT")
+					{thead.append("td").text("Report Count");}
+				else if(lossSelect == "PAID")
+					{thead.append("td").text("Weighted Average Lag");}
+				thead.append("td").text(d3.select("#select-type").property("value") == "REPORT"?"Total Expected":theadLabel[d3.select("#select-loss").property("value")]);
+				// append a cell for each lag header
+				for (var i = 0; i <= columnCount; i++) {
+					thead.append("td").attr("class","column-"+i).text(i);
+				}
+				// append a row for each line of data
+				var tbody = d3.select("#tbody-1").selectAll("tr")
+					.data(data)
+					.enter()
+					.append("tr");
+				// append first cell of each row with report/calendar period
+				tbody.append("td").text(function(d) {return d.key;});
+				// append reported cell if it is a reported value
+				if(d3.select("#select-type").property("value") == "REPORT")
+					{tbody.append("td").text(function(d) {return +d.reportedCount;});}
+				else if(lossSelect == "PAID")
+					{tbody.append("td").text(function(d) {
+						return d3.format("0.2f")(d3.sum(d.lag, function(e, i) {return +e.weightedValue*(i);})/
+						d3.sum(d.lag, function(e) {return +e.weightedValue;}));});}
+					// append a cell to fill later if it is calendar amount (for sum of columns) or PAID or INCURRED (for expected amount)
+				tbody.append("td")
+						.text(function(d) {return d3.select("#select-type").property("value") == "CALENDAR"  || lossSelect == "BILL"
+						?
+						d3.format(formatObject[d3.select("#select-loss").property("value")+"-"+d3.select("#select-report").property("value")])
+							(d3.sum(d.lag, function(e) {return +e.textValue;}))
+						:
+						d.lag[columnCount].formatValue?d3.format(d.lag[columnCount].formatValue)(d.lag[columnCount].textValue):d.lag[columnCount].textValue
+						});
+					// append cells for each lag
+				tbody.selectAll(".lagCells")
+					.data(function(d) {return d.lag})
+					.enter()
+					.append("td")
+					.attr("link-text",function(d) {return php_string + "&row=" + d.row + "&column=" + d.column;})// this the php string to pass to additional window opened when clicking on cell
+					.attr("sql-text",function(d) {return "select CLTRN_POL_NUM, CLTRN_LOSS_SEQ, CLTRN_CLMT_SEQ, " + 
+						"CLTRN_COV_LINE, SUM(CLTRN_CLM_PAID_AMT) AS CLAIM_PAID, SUM(CLTRN_CLM_RES_AMT) AS CLAIM_RES, " +
+						"SUM(CLTRN_RECOV_PAID_AMT+CLTRN_RECOV_EXP_PAID_AMT) AS RECOVERIES, " +
+						"min(date(CLTRN_TRN_DATE)) as REPORT_DATE from OSIS.CLTRN " +
+						"WHERE CLTRN_COV_LINE LIKE '" + covSelect + "' " +
+						"and left(CLTRN_POL_NUM,3) in ('WIN','SEL','OPT','ICN') " +
+						"and left(CLTRN_POL_NUM,3) LIKE '" + progSelect + "' " +
+						"and left(CLTRN_TRN_DATE,6) <=" + 
+						"period_add(replace('" + d.row + "','-','')," + (typeSelect=="REPORT"?d.column:0) + ") " +
+						"GROUP BY 1,2,3,4 " +
+						"having date_format(min(date(CLTRN_TRN_DATE)),'%Y%m') = " + 
+						"period_add(replace('" + d.row + "','-','')," + (typeSelect=="REPORT"?0:-d.column) + ") ;";})// this creates a string of sql code saved to clipboard when clicking on cell
+					.on("click",function(d) {
+						if(timeSelect=="MONTH" && stateSelect == "FL" && (lossSelect == "PAID" || lossSelect == "INCUR"))
+						{	// create pop that says the sql code has been saved to clipboard
+							var sqlText = d3.select(this).attr("sql-text");
+							copyit(sqlText);
+							d3.select("#tooltip").style("display","inline").style("opacity",1)
+								.style("top",d3.event.pageY + "px")
+								.style("left",d3.event.pageX + "px");
+							d3.select("#tooltip").transition().delay(1000).duration(1000).style("opacity",0);
+							d3.select("#tooltip").transition().delay(2000).style("display","none");
+						}
+					})
+					.on("dblclick",function(d) {
+					d3.select("#tooltip").style("display","none");
+					var linkText = "severity_list.html" + d3.select(this).attr("link-text");
+					switch (d3.select("#select-loss").property("value")) {
+						case "PAID":
+						case "INCUR":
+							window.open(linkText); // open new window with claims list
+							break;
+					}
+					})
+					.attr("class","lagCells")
+					.style("border",function(d) {return d.borderValue;})
+					.text(function(d) {//format if there is a formatting value
+						return d.formatValue?d3.format(d.formatValue)(d.textValue):d.textValue;
+					});
+					// function for copying to clipboard
+					 function toClipBoard(id){
+    r = document.getElementById(id);
+    r.select();
+    document.execCommand("COPY");
+}
+function copyit(x) {
+    var oelem=document.createElement("input");
+    with (oelem) {
+        id="fld";
+        name="txt";
+        type="text"
+        //style.size="72";    //ie only from the beginning already
+        //readOnly=true    //not essential
+        value=x;
+    }
+    document.body.appendChild(oelem);
+    toClipBoard(oelem.id);
+    document.body.removeChild(oelem);
+    oelem=null;
+}
+					
+				// Create top table for yearly quantiles
+				// group data by year
+				var yearAverage = d3.nest()
+					.key(function(d) {return (d3.select("#select-time").property("value")=="MONTH"
+						?
+						d.key.substr(0,4)
+						:
+						d.key.substr(8,4));})
+					.entries(data);
+				
+				// append headings to quantile table
+				var thead2 = d3.select("#thead-2").append("tr");
+					thead2.append("td").text("Year");
+					thead2.append("td").text("25th Percentile");
+					thead2.append("td").text("50th Percentile");
+					thead2.append("td").text("75th Percentile");
+				var tbody2 = d3.select("#tbody-2").selectAll("tr").data(yearAverage).enter().append("tr");
+				
+				tbody2.append("td")
+					.text(function(d) {
+					return d.key;});
+				// 25th Percentile calculation
+				tbody2.append("td")
+					.text(function(d) {
+						var count = d.values.length;
+						d.values.forEach(function(e) {
+							e.usedValue = (d3.select("#select-type").property("value") == "REPORT" && lossSelect != "BILL"
+							?
+							+e.lag[columnCount].textValue
+							:
+							d3.sum(e.lag, function(f) {return +f.textValue;}));
+						});
+						var percentile = count/4 - .25;
+						var sortedData = d.values.sort(function(a, b) {return d3.ascending(+a.usedValue, +b.usedValue);});
+						return d3.format(formatObject[d3.select("#select-loss").property("value") + "-" + d3.select("#select-report").property("value")])
+						(
+							+sortedData[Math.floor(percentile)].usedValue * (1-(percentile%1)) + 
+							+sortedData[Math.ceil(percentile)].usedValue * (percentile%1));});
+				// 50th Percentile calculation
+				tbody2.append("td")
+					.text(function(d) {
+						var count = d.values.length;
+						d.values.forEach(function(e) {
+							e.usedValue = (d3.select("#select-type").property("value") == "REPORT" && lossSelect != "BILL"
+							?
+							+e.lag[columnCount].textValue
+							:
+							d3.sum(e.lag, function(f) {return +f.textValue;}));
+						});
+						var percentile = count/2 - .5;
+						var sortedData = d.values.sort(function(a, b) {return d3.ascending(+a.usedValue, +b.usedValue);});
+						
+						return d3.format(formatObject[d3.select("#select-loss").property("value") + "-" + d3.select("#select-report").property("value")])
+						(
+							+sortedData[Math.floor(percentile)].usedValue * (1-(percentile%1)) + 
+							+sortedData[Math.ceil(percentile)].usedValue * (percentile%1));});
+				// 75th Percentile calculation
+				tbody2.append("td")
+					.text(function(d) {
+						var count = d.values.length;
+						d.values.forEach(function(e) {
+							e.usedValue = (d3.select("#select-type").property("value") == "REPORT" && lossSelect != "BILL"
+							?
+							+e.lag[columnCount].textValue
+							:
+							d3.sum(e.lag, function(f) {return +f.textValue;}));
+						});
+						var percentile = count*(3/4) - .75;
+						var sortedData = d.values.sort(function(a, b) {return d3.ascending(+a.usedValue, +b.usedValue);});
+						
+						return d3.format(formatObject[d3.select("#select-loss").property("value") + "-" + d3.select("#select-report").property("value")])
+						(
+							+sortedData[Math.floor(percentile)].usedValue * (1-(percentile%1)) + 
+							+sortedData[Math.ceil(percentile)].usedValue * (percentile%1));});
+							
+				d3.selectAll("td").style("padding","2px 10px");
+				
+				if(d3.select("#select-type").property("value") == "REPORT")
+				{
+					var fixedAmount = 3;
+					var width1 = "100px", width2 = "100px";
+				}
+				else
+				{
+					var fixedAmount = lossSelect=="PAID"?3:2;
+					var width1 = "150px", width2 = "75px";
+				}
+				var otherWidth = stateSelect=="TX"?"65px":"35px";
+				// alter triangle to datatable format, which allows frozen rows and columns, and sorting
+				 $('#myTable').DataTable( {
+				 "columnDefs" : [
+					{"width" : d3.select("#select-time").property("value") == "WEEK"?"150px":"100px", "targets" : 0},
+					{"width" : width2, "targets" : 1},
+					{"width" : otherWidth, "targets" : "_all"}
+				 ],
+		select: {
+			style: 'os',
+			items: 'cell'
+		},
+		filter: false,
+		info: false,
+        dom:            "Bfrtip",
+        scrollY:        "50vh",
+        scrollX:        xScrolling,
+        scrollCollapse: true,
+        paging:         false,
+        buttons:        [ 'colvis' ],
+        fixedColumns:   {
+            leftColumns: fixedAmount
+			
+        }
+    } );
+	$('div.dataTables_scrollBody').scrollTop();
+				
+			});
+		}
+			
+			
+			
+	function exportTableToCSV($table, filename) {
+    
+        var $rows = $table.find('tr:has(td),tr:has(th)'),
+    
+            // Temporary delimiter characters unlikely to be typed by keyboard
+            // This is to avoid accidentally splitting the actual contents
+            tmpColDelim = String.fromCharCode(11), // vertical tab character
+            tmpRowDelim = String.fromCharCode(0), // null character
+    
+            // actual delimiter characters for CSV format
+            colDelim = '","',
+            rowDelim = '"\r\n"',
+    
+            // Grab text from table into CSV formatted string
+            csv = '"' + $rows.map(function (i, row) {
+                var $row = $(row), $cols = $row.find('td,th');
+    
+                return $cols.map(function (j, col) {
+                    var $col = $(col), text = $col.text();
+    
+                    return text.replace(/"/g, '""'); // escape double quotes
+    
+                }).get().join(tmpColDelim);
+    
+            }).get().join(tmpRowDelim)
+                .split(tmpRowDelim).join(rowDelim)
+                .split(tmpColDelim).join(colDelim) + '"',
+    
+            
+    
+            // Data URI
+            csvData = 'data:application/csv;charset=utf-8,' + encodeURIComponent(csv);
+            
+            
+        	if (window.navigator.msSaveBlob) { // IE 10+
+        		//alert('IE' + csv);
+        		window.navigator.msSaveOrOpenBlob(new Blob([csv], {type: "text/plain;charset=utf-8;"}), "csvname.csv")
+        	} 
+        	else {
+        		$(this).attr({ 'download': filename, 'href': csvData, 'target': '_blank' }); 
+        	}
+    }
+    
+    // This must be a hyperlink
+    $("#xx").on('click', function (event) {
+    	
+        exportTableToCSV.apply(this, [$('#myTable'), 'export.csv']);
+        
+        // IF CSV, don't do event.preventDefault() or return false
+        // We actually need this to be a typical hyperlink
+    });
+
+			
+	});
+	</script>
+</body>
+</html>
