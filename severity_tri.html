@@ -39,7 +39,7 @@
 	<!-- d3.js reference -->
 	<script src="https://d3js.org/d3.v4.min.js" charset="utf-8"></script>
 	<!-- bootstrp reference -->
-	<link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.6/css/bootstrap.min.css" integrity="sha384-rwoIResjU2yc3z8GV/NPeZWAv56rSmLldC3R/AZzGRnGxQQKnKkoFVhFQhNUwEyJ" crossorigin="anonymous">
 	<!-- data tables css reference -->
 	<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/v/dt/jqc-1.12.3/dt-1.10.12/cr-1.3.2/fc-3.2.2/fh-3.1.2/sc-1.4.2/se-1.2.0/datatables.min.css"/>
 	<!-- data tables javascript reference -->
@@ -52,50 +52,50 @@
 	<div class="row" style="height: 20px;">
 		<select id ="select-time">
 			<option value="MONTH">Month</option>
-			<option value="WEEK">Week</option>
+			<!-- remove option for demo <option value="WEEK">Week</option> -->
 		</select>
 		<select id ="select-type">
 			<option value="REPORT">Report</option>
-			<option value="CALENDAR">Calendar</option>
+			<!-- remove option for demo <option value="CALENDAR">Calendar</option> -->
 		</select>
 		<select id ="select-state">
 			<option value="FL" selected=TRUE>Florida</option>
-			<option value="TX">Texas</option>
+			<!-- remove option for demo <option value="TX">Texas</option> -->
 		</select>
 		<select id ="select-program">
 			<!-- program options are populated in script based on state selected -->
 			<option class="keep" value="%">All Programs</option>
-			<option value="WIN">WIN</option>
+			<!-- remove option for demo <option value="WIN">WIN</option> -->
 		</select>
-		<select id ="select-coverage">
+		<!-- remove option for demo <select id ="select-coverage">
 			<option value="%">All Coverages</option>
 			<option value="PIP" selected=TRUE>PIP</option>
 			<option value="PD">PD</option>
 			<option value="BI%">BI</option>
 			<option value="CMP">CMP</option>
 			<option value="COL">COL</option>
-		</select>
+		</select> -->
 		<select id ="select-loss">
 			<option value="PAID">Paid Severity</option>
 			<option value="INCUR" >Incurred Severity</option>
-			<option value="CWOP" >CWOPs</option>
+			<!-- remove option for demo <option value="CWOP" >CWOPs</option>
 			<option value="OPEN" >Open Claims</option>
 			<option value="CWA" >CWAs</option>
-			<option value="BILL" >Medical Bills</option>
+			<option value="BILL" >Medical Bills</option> -->
 		</select>
 		<select id ="select-report">
 			<option value="YES">Per Reported</option>
 			<option value="NO">Total Amount</option>
 		</select>
-		<select id ="select-ec">
+		<!-- remove option for demo <select id ="select-ec">
 			<option value="YES">Remove EC</option>
 			<option value="LIT">Remove LIT</option>
 			<option value="LITONLY">LIT Only</option>
 			<option value="NO" >Include Both</option>
 			<option value="NORECOV">Remove Recoveries</option>
 			<option value="RECOVONLY">Recoveries Only</option>
-		</select>
-		<select id ="select-county">
+		</select> -->
+		<!-- remove option for demo <select id ="select-county">
 			<option value="ALL">All Counties</option>
 			<option value="MIAMI-DADE">Miami-Dade</option>
 			<option value="BROWARD">Broward</option>
@@ -104,14 +104,14 @@
 			<option value="HILLSBOROUGH">Hillsborough</option>
 			<option value="DUVAL">Duval</option>
 			<option value="OTHER">Other</option>
-		</select>
-		<select id="select-limits" multiple disabled=true style="opacity:0;">
+		</select> -->
+		<!-- remove option for demo <select id="select-limits" multiple disabled=true style="opacity:0;">
 			<option value="10000/20000" selected=true>10/20</option>
 			<option value="25000/50000" selected=true>25/50</option>
 			<option value="50000/100000" selected=true>50/100</option>
 			<option value="100000/300000" selected=true>100/300</option>
 			<option value="OTHER" selected=true>Other</option>
-		</select>
+		</select> -->
 		<button id="runButton" type = "button">Run Data</button>
 	</div>
 <br>
@@ -173,24 +173,24 @@
 		d3.selectAll("select").style("color","black");
 		// put selected values into variables
 		var progs = {"FL" : ['WIN','OPT','SEL','ICN'], "TX" : ['AL','AS','ES','EL','EV']};
-		var covSelect = d3.select("#select-coverage").property("value");
+		//var covSelect = d3.select("#select-coverage").property("value");
 		var lossSelect = d3.select("#select-loss").property("value");
 		var reportSelect = d3.select("#select-report").property("value");
 		var stateSelect = d3.select("#select-state").property("value");
 		var typeSelect = d3.select("#select-type").property("value");
 		var timeSelect = d3.select("#select-time").property("value");
-		covSelect = (covSelect == "BI%" && stateSelect == "TX")?"BI":covSelect;
+		//covSelect = (covSelect == "BI%" && stateSelect == "TX")?"BI":covSelect;
 		// make limit select an array because more than one value can be selected
-		var limitSelect = [];
+		/*var limitSelect = [];
 		d3.select("#select-limits").selectAll("option").attr("nothing",function(d) {
 			var option = d3.select(this);
 			if(option.property("selected") == true) 
 			{limitSelect.push(option.property("value"));};
 				});
 		// change limit select array to underscore separated text string so it can be passed to php script
-		limitSelect = limitSelect.join("_");
+		limitSelect = limitSelect.join("_");*/
 		// make program options correspond to correct state
-		var progOptions = d3.select("#select-program")
+		/*var progOptions = d3.select("#select-program")
 			.selectAll("option:not(.keep)")
 			.data(progs[stateSelect]);
 		progOptions
@@ -202,9 +202,9 @@
 			.text(function(d) {return d;});
 		progOptions
 			.exit().remove();
-		var progSelect = d3.select("#select-program").property("value");
+		var progSelect = d3.select("#select-program").property("value");*/
 	
-		d3.select("#select-report").property("disabled",lossSelect.substring(lossSelect.length-4,lossSelect.length) == "TIME")
+		/*d3.select("#select-report").property("disabled",lossSelect.substring(lossSelect.length-4,lossSelect.length) == "TIME")
 			.style("opacity",lossSelect.substring(lossSelect.length-4,lossSelect.length) == "TIME"?.5:1);
 	
 		d3.select("#select-limits").property("disabled",covSelect != "BI%")
@@ -214,7 +214,7 @@
 		
 		// disable ec options when looking at count numbers
 		d3.select("#select-ec").property("disabled",cwopOpenCwaBill)
-			.style("opacity",cwopOpenCwaBill?.5:1);
+			.style("opacity",cwopOpenCwaBill?.5:1);*/
 			
 		// delete existing table div, and reappend
 		d3.select("#tableDiv").remove();
@@ -237,7 +237,7 @@
 		loop = 72;
 		xScrolling = true;
 		// create string from selected options to pass in php string
-		var php_string = "?prog="+d3.select("#select-program").property("value")+
+		/*var php_string = "?prog="+d3.select("#select-program").property("value")+
 			"&cov="+d3.select("#select-coverage").property("value")+
 			"&loss="+d3.select("#select-loss").property("value")+
 			"&county="+d3.select("#select-county").property("value")+
@@ -245,15 +245,20 @@
 			"&type="+d3.select("#select-type").property("value")+
 			"&time="+d3.select("#select-time").property("value")+
 			"&limits="+limitSelect+
-			"&state="+stateSelect;
+			"&state="+stateSelect;*/
 		// run 72 loops when grouped by month, and 312 for weeks; 6 years of data
 		loop = d3.select("#select-time").property("value")=="MONTH"?72:312;
 		// output local host version of php address into console for development purposes
-		console.log("localhost/product/php/severity_tri.php" + php_string);
+		//console.log("localhost/product/php/severity_tri.php" + php_string);
 		// delete all rows from table
 		d3.selectAll("tr").remove();
 			// call php string
-			var reportJson = d3.json("php/severity_tri.php" + php_string, function(error, data) {
+			// remove php connection for demo data var reportJson = d3.json("php/severity_tri.php" + php_string, function(error, data) {
+			var reportCSV = d3.csv("data/data.csv", function(error, data) {
+			
+				data.forEach(function(d) {
+					d.PAID_AMOUNT = lossSelect == "PAID"?+d.ACTUAL_PAID_AMOUNT:+d.INCURRED_AMOUNT;
+				});
 				// format the cell text based on calculated number and whether it is per reported
 				var formatObject = {
 					"PAID-YES" : ".0f",
@@ -278,6 +283,7 @@
 					"BILL" : "BILLS_COUNT"
 						}
 				// group resulting data by report period or calendar period, depending on options selected
+				console.log(data);
 				data = d3.nest()
 					.key(function(d) {return d3.select("#select-type").property("value")=="REPORT"?d.REPORT_MONTH:d.CALENDAR_MONTH;})
 					.sortKeys(d3.ascending)
@@ -450,19 +456,6 @@
 					.data(function(d) {return d.lag})
 					.enter()
 					.append("td")
-					.attr("link-text",function(d) {return php_string + "&row=" + d.row + "&column=" + d.column;})// this the php string to pass to additional window opened when clicking on cell
-					.attr("sql-text",function(d) {return "select CLTRN_POL_NUM, CLTRN_LOSS_SEQ, CLTRN_CLMT_SEQ, " + 
-						"CLTRN_COV_LINE, SUM(CLTRN_CLM_PAID_AMT) AS CLAIM_PAID, SUM(CLTRN_CLM_RES_AMT) AS CLAIM_RES, " +
-						"SUM(CLTRN_RECOV_PAID_AMT+CLTRN_RECOV_EXP_PAID_AMT) AS RECOVERIES, " +
-						"min(date(CLTRN_TRN_DATE)) as REPORT_DATE from OSIS.CLTRN " +
-						"WHERE CLTRN_COV_LINE LIKE '" + covSelect + "' " +
-						"and left(CLTRN_POL_NUM,3) in ('WIN','SEL','OPT','ICN') " +
-						"and left(CLTRN_POL_NUM,3) LIKE '" + progSelect + "' " +
-						"and left(CLTRN_TRN_DATE,6) <=" + 
-						"period_add(replace('" + d.row + "','-','')," + (typeSelect=="REPORT"?d.column:0) + ") " +
-						"GROUP BY 1,2,3,4 " +
-						"having date_format(min(date(CLTRN_TRN_DATE)),'%Y%m') = " + 
-						"period_add(replace('" + d.row + "','-','')," + (typeSelect=="REPORT"?0:-d.column) + ") ;";})// this creates a string of sql code saved to clipboard when clicking on cell
 					.on("click",function(d) {
 						if(timeSelect=="MONTH" && stateSelect == "FL" && (lossSelect == "PAID" || lossSelect == "INCUR"))
 						{	// create pop that says the sql code has been saved to clipboard
@@ -474,16 +467,6 @@
 							d3.select("#tooltip").transition().delay(1000).duration(1000).style("opacity",0);
 							d3.select("#tooltip").transition().delay(2000).style("display","none");
 						}
-					})
-					.on("dblclick",function(d) {
-					d3.select("#tooltip").style("display","none");
-					var linkText = "severity_list.html" + d3.select(this).attr("link-text");
-					switch (d3.select("#select-loss").property("value")) {
-						case "PAID":
-						case "INCUR":
-							window.open(linkText); // open new window with claims list
-							break;
-					}
 					})
 					.attr("class","lagCells")
 					.style("border",function(d) {return d.borderValue;})
